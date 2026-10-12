@@ -4,12 +4,16 @@ Regras de commit e Trello da **Rocketify**. Skill única, replicada em todos os 
 
 ## O que define
 
-1. **Autoria** — código gerado por agente commita como `agent-<função>` com e-mail
-   `agent-<função>@<domínio do sistema>` (VisitaPro, SocialRanking, Olfatto).
+1. **Autoria** — autor do git é sempre o dono do repositório; a função do agente vai no
+   trailer `Agent:` do commit. 9 funções: `gerente`, `product-manager`, `tech-lead`,
+   `backend`, `frontend`, `ui-ux-designer`, `devops`, `qa`, `revisor`.
 2. **Histórico** — normalização via `git filter-repo` + force-push.
 3. **Conventional commits sempre.**
 4. **Trello sempre atualizado** — checklist, log em comentário e movimento de card.
 5. **Esta skill como fonte da verdade** — atualize aqui, replique com um `git pull`.
+
+Motivo do trailer em vez do e-mail: Vercel Hobby bloqueia o deploy quando o e-mail do
+autor do commit não resolve para uma conta do GitHub. Detalhes em [`SKILL.md`](SKILL.md).
 
 ## Instalar (uma vez)
 
@@ -32,11 +36,10 @@ Reinicie o OpenCode para carregar a versão nova.
 
 ## Como um agente deve aplicar
 
-- Antes de `git commit`: definir `user.name`/`user.email` do agente (`git -c ...`) e
-  escrever a mensagem em conventional commits.
+- Antes de `git commit`: usar o e-mail do dono e escrever a mensagem em conventional
+  commits com o trailer `Agent:` no final do corpo.
 - Ao concluir tarefa ou mudar estado: atualizar o card do Trello (checklist + log +
   mover de coluna) na mesma hora.
-- Em dúvida sobre qual `agent-<função>` usar: inferir pelo escopo/arquivos e, se
-  persistir, perguntar.
+- Em dúvida sobre qual função usar: inferir pelo escopo/arquivos e, se persistir, perguntar.
 
 Detalhes, tabela de ARIs das listas e roteiro de Trello: [`SKILL.md`](SKILL.md).

@@ -27,7 +27,22 @@ git commit -m "<tipo>(<escopo>): descrição" -m "corpo do commit
 Agent: backend"
 ```
 
-`Agent:` aceita `backend`, `frontend`, `data-arch`, `gerente`.
+`Agent:` aceita exatamente um destes 9 valores:
+
+| `Agent:` | Quando usar |
+|---|---|
+| `gerente` | coordenação, escopo, decisão de produto, priorização |
+| `product-manager` | requisitos, backlog, critérios de aceite, escopo de card |
+| `tech-lead` | arquitetura, **modelagem de dados**, **segurança**, decisões técnicas |
+| `backend` | regras de negócio, API, persistência, integrações |
+| `frontend` | telas, componentes, estado, chamadas de API |
+| `ui-ux-designer` | design system, tokens, acessibilidade, copy |
+| `devops` | infra, deploy, CI/CD, variáveis de ambiente, observabilidade |
+| `qa` | testes automatizados, matriz de casos, verificação de correção |
+| `revisor` | revisão de código, Simplificação, checagem antes do merge |
+
+**Modelagem de dados e segurança vão para `tech-lead`** — não criar `data-arch` nem
+`security`. São decisões técnicas, não agentes separados.
 
 ### Por que o e-mail do agente não pode ser o autor
 
@@ -75,9 +90,13 @@ isso o trailer no commit é obrigatório desde o primeiro push.
 
 ### Inferir a função quando houver dúvida
 
-Na ordem: 1) o escopo da mensagem (`backend`, `frontend`, `auth`, `data`); 2) os arquivos
-tocados (`src/main/java` → backend, `frontend/` → frontend, `prisma/`, `migrations/` →
-data-arch); 3) a tarefa em andamento. Se continuar ambíguo, **pergunte** — não chute.
+Na ordem: 1) a tarefa em andamento no Trello; 2) o escopo da mensagem e os arquivos
+tocados (`src/main/java` → `backend`, `frontend/` → `frontend`, `prisma/`,
+`migrations/`, schema → `tech-lead`, `render.yaml`/`.github/workflows/` → `devops`,
+`*Test.java` → `qa`); 3) quem pediu o trabalho. Se continuar ambíguo, **pergunte** — não chute.
+
+Trabalhos que tocam mais de uma área vão para quem coordena (`tech-lead` ou `gerente`),
+não para o agente da área mais visível.
 
 ### Exceção: normalizar histórico
 
