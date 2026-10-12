@@ -43,7 +43,10 @@ deployment, antes de qualquer build step. Consequências práticas:
 - O gate lê o commit que **dispara** o build — inclusive o push de branch, que dispara preview
   deployment. Por isso "só o master está limpo" **não** basta.
 - `Ignored Build Step` **não resolve**. Ele pula o *build*, mas o commit já foi rejeitado antes.
-  Serve como segunda camada para não promover branch a produção, não como correção do gate.
+  Pior: depois do autor do git corrigido, ele só serve pra branch não deployar, engolindo
+  deploys em silêncio. **Não configure** — a raiz (autor do git) já basta. Se algum dia o consumo
+  de builds/minutos do Hobby apertar, use Project Settings → Git → Deployments → desmarcar
+  branches, que mexe só em preview e é mais explícito.
 - `Co-authored-by:` também não resolve: o Vercel lê o campo de autor, não o trailer.
 
 Um e-mail `agent-<função>@<dominio>` que não seja conta do GitHub sempre falha no gate. O trailer
