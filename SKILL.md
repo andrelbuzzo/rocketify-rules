@@ -108,9 +108,24 @@ novo já sai no padrão acima, então não há o que normalizar.
 **Só para repositórios com commits de agente já no histórico.** Todo commit novo já sai no padrão
 do §1, então na maioria dos casos não há o que fazer.
 
-Quando precisar: `git filter-repo` com `--mailmap` (troca o e-mail de agente pelo do dono) e
-`--message-callback` (insere o trailer `Agent:`). Backups em mirror antes de reescrever.
-Mensagens de merge (`Merge pull request #N`) são preservadas como estão.
+Quando precisar, use **um único `--commit-callback`** (não `--mailmap` separado): ele troca
+author e committer e insere o trailer `Agent:` no mesmo passo, porque o `--message-callback` não
+tem acesso ao autor do commit.
+
+Pegadinhas do `git filter-repo` no Windows — todas custaram tempo nesta execução:
+
+- O arquivo do callback é o **corpo** da função, sem `def`, e `message` / `author_name` /
+  `author_email` chegam como **bytes**. `return` é obrigatório.
+- Precisa rodar **de dentro** do repositório (não existe `-C`).
+- Apague `.git/filter-repo/already_ran` antes de rodar, ou responda `n` ao prompt — senão ele
+  trava esperando stdin.
+- O filter-repo faz **autostash** da working tree e o repack descarta o objeto depois. Stash
+ manual antes e **recupere a mudança depois** (`git fsck --unreachable` não acha: o repack já
+  eliminou). Alternativa mais segura: deixe a working tree limpa durante o rewrite.
+- Sempre valide num **clone de teste** antes de tocar no repo real.
+
+Mensagens de merge (`Merge pull request #N`) são preservadas como estão; já o `merge(...)` de
+outra casa vira `chore(merge):`.
 
 Cuidado: reescrever histórico força push e **invalida branches e PRs abertos**. Num repo com
 Hobby na Vercel, o commit antigo órfão passa a bloquear deploy — limpe os PRs antes.
