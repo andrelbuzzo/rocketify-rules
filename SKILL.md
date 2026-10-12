@@ -14,30 +14,61 @@ Empresa: **Rocketify**. Cada sistema tem seu próprio domínio de e-mail.
 
 ## 1. Autoria de commit
 
-Todo código gerado por agente vira commit com autor `agent-<função>`:
+**O autor do git é SEMPRE o humano dono do repositório.** A função do agente vai num trailer
+`Agent:` no corpo do commit, não no e-mail.
 
-| Nome | E-mail |
+| Nome (git author) | E-mail |
 |---|---|
-| `agent-backend` | `agent-backend@<dominio>` |
-| `agent-frontend` | `agent-frontend@<dominio>` |
-| `agent-data-arch` | `agent-data-arch@<dominio>` |
-| `agent-gerente` | `agent-gerente@<dominio>` |
-
-Domínio por sistema:
-
-| Sistema | Domínio |
-|---|---|
-| VisitaPro | `visitapro.com.br` |
-| SocialRanking | `socialranking.com.br` |
-| Olfatto | `olfatto.store` |
-
-Commits humanos: `André Buzzo <1138225+andrelbuzzo@users.noreply.github.com>`.
-
-**Definir autoria antes de commitar:**
+| `André Buzzo` | `1138225+andrelbuzzo@users.noreply.github.com` |
 
 ```powershell
-git -c user.name="agent-backend" -c user.email="agent-backend@visitapro.com.br" commit -m "..."
+git commit -m "<tipo>(<escopo>): descrição" -m "corpo do commit
+
+Agent: backend"
 ```
+
+`Agent:` aceita `backend`, `frontend`, `data-arch`, `gerente`.
+
+### Por que o e-mail do agente não pode ser o autor
+
+Plataformas de hosting (Vercel Hobby) **bloqueiam o deploy** quando o e-mail do autor do commit
+não resolve para uma conta do GitHub com acesso ao projeto:
+
+> The deployment was blocked because the commit email `<email>` could not be matched to a
+> GitHub account.
+
+Isso vale para **qualquer** commit alcançável, não só os de `master`: o gate roda na criação do
+deployment, antes de qualquer build step. Consequências práticas:
+
+- O gate lê o commit que **dispara** o build — inclusive o push de branch, que dispara preview
+  deployment. Por isso "só o master está limpo" **não** basta.
+- `Ignored Build Step` **não resolve**. Ele pula o *build*, mas o commit já foi rejeitado antes.
+  Serve como segunda camada para não promover branch a produção, não como correção do gate.
+- `Co-authored-by:` também não resolve: o Vercel lê o campo de autor, não o trailer.
+
+Um e-mail `agent-<função>@<dominio>` que não seja conta do GitHub sempre falha no gate. O trailer
+`Agent:` preserva a autoria por função no histórico sem expor o e-mail.
+
+### Nunca dar amend + force-push em branch já pushada
+
+O commit antigo fica órfão (nenhuma branch o referencia) mas continua vivo porque o PR o cita.
+O Vercel tenta validá-lo e falha com:
+
+> This commit does not belong to any branch on this repository, and may belong to a fork
+> outside of the repository.
+
+Se errar a mensagem depois de pushar, **commit novo**. Nunca `git commit --amend` + `force-push`.
+
+### Fluxo obrigatório
+
+1. Branch `feature/<slug>` ou `fix/<slug>` — **nunca** commit direto em `master`.
+2. Commitar com o e-mail do dono + trailer `Agent:`.
+3. PR para `master`.
+4. **Squash merge** — o autor do commit final passa a ser quem fez o merge, reforçando o gate.
+5. Apagar a branch local e remota.
+
+O squash merge resolve o commit final de `master`, mas **não** limpa os commits da branch — por
+isso o trailer no commit é obrigatório desde o primeiro push.
 
 ### Inferir a função quando houver dúvida
 
@@ -45,12 +76,22 @@ Na ordem: 1) o escopo da mensagem (`backend`, `frontend`, `auth`, `data`); 2) os
 tocados (`src/main/java` → backend, `frontend/` → frontend, `prisma/`, `migrations/` →
 data-arch); 3) a tarefa em andamento. Se continuar ambíguo, **pergunte** — não chute.
 
+### Exceção: normalizar histórico
+
+Só para repositórios já existentes com commits de agente no histórico — o §2 explica. Todo commit
+novo já sai no padrão acima, então não há o que normalizar.
+
 ## 2. Histórico anterior
 
-Commits antigos devem ter autoria e mensagem no padrão. Para normalizar um histórico
-existente, use `git filter-repo` com `--mailmap` (autoria) e `--message-callback`
-(mensagem) e force-push em todos os branches. Backups em mirror antes de reescrever.
+**Só para repositórios com commits de agente já no histórico.** Todo commit novo já sai no padrão
+do §1, então na maioria dos casos não há o que fazer.
+
+Quando precisar: `git filter-repo` com `--mailmap` (troca o e-mail de agente pelo do dono) e
+`--message-callback` (insere o trailer `Agent:`). Backups em mirror antes de reescrever.
 Mensagens de merge (`Merge pull request #N`) são preservadas como estão.
+
+Cuidado: reescrever histórico força push e **invalida branches e PRs abertos**. Num repo com
+Hobby na Vercel, o commit antigo órfão passa a bloquear deploy — limpe os PRs antes.
 
 ## 3. Conventional commits — sempre
 
@@ -63,7 +104,8 @@ Tipos: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`
 
 Escopos usuais: `backend`, `frontend`, `auth`, `tests`, `infra`, `docs`.
 Corpo opcional (linha em branco depois do subject); use-o para o "porquê", não para
-descrever o diff. Nunca coloque trailer `Author:` na mensagem — a autoria vem do git.
+descrever o diff. Trailer `Agent:` no final do corpo (ver §1). Nunca coloque trailer
+`Author:` — a autoria vem do git, e um e-mail de agente ali bloqueia o deploy.
 
 ```powershell
 git commit -m "feat(backend): anticonflito por corretor em vez de corretor+imovel"
